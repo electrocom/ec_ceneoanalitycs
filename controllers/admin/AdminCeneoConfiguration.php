@@ -55,16 +55,16 @@ public static $definition;
         $buy_now_options=CeneoConfiguration::FORMSELECTBUYNOW;
        array_splice($buy_now_options,0,1);
 
-        $getceneo_link = $this->context->link->getModuleLink($this->module->name,'getceneo',array('xml'=>'','token'=>substr(   md5(_COOKIE_KEY_),0,10)));
+        $getceneo_link = $this->context->link->getModuleLink($this->module->name,'ceneo',array('getceneo'=>'','token'=>substr(   md5(_COOKIE_KEY_),0,10)));
         $html_content=' <span> Pobieranie cen z CENEO do analizy:</span> <a href="'.$getceneo_link.'">'.$getceneo_link.'</a></br>';
 
-        $generate_link = $this->context->link->getModuleLink($this->module->name,'generate',array('xml'=>'','token'=>substr(   md5(_COOKIE_KEY_),0,10)));
+        $generate_link = $this->context->link->getModuleLink($this->module->name,'ceneo',array('generate'=>'','token'=>substr(   md5(_COOKIE_KEY_),0,10)));
         $html_content.=' <span> Autoregulacja cen w sklepie:</span> <a href="'.$generate_link.'">'.$generate_link.'</a></br>';
 
         $xml_link=$this->context->link->getModuleLink($this->module->name,'ceneo',array('xml'=>'','token'=>substr(   md5(_COOKIE_KEY_),0,10)));
         $html_content.=' <span> Generowanie XML dla Ceneo:</span> <a href="'.$xml_link.'">'.$xml_link.'</a></br>';
 
-        $this->context->link->getModuleLink($this->module->name,'ceneo',array('xml'=>'','token'=>substr(   md5(_COOKIE_KEY_),0,10)));
+
 
         $this->fields_form =         array(
             'legend' => array(
