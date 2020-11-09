@@ -254,17 +254,18 @@ private   $product;
    }
 
     static public function ImportFromSuppiler(){
-$sql='SELECT * FROM `ps_product_supplier` WHERE `id_supplier` = 7 AND `id_product` NOT IN( SELECT `id_product` FROM `ps_ec_ceneo_analitycs` ) ';
+$sql='SELECT * FROM `ps_product` WHERE `active` = 1 AND `id_product` NOT IN( SELECT `id_product` FROM `ps_ec_ceneo_analitycs` ) ';
 $result= Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
 
 foreach ( $result as $key =>$val ) {
-    if ( filter_var($val['product_supplier_reference'] , FILTER_VALIDATE_INT) ){
+
    $date= date_create()->format('Y-m-d H:i:s');
-    $sql = 'INSERT INTO `ps_ec_ceneo_analitycs` (`id_ceneo_analitycs`, `id_product`, `id_ceneo`, `TS_Zal`)
-VALUES (NULL,\'' . $val['id_product'] . '\', \'' . $val['product_supplier_reference'] . '\', \''.$date.'\')';
+   $id_ceneo=null;
+    $sql = 'INSERT INTO `ps_ec_ceneo_analitycs` (`id_ceneo_analitycs`, `id_product`, `id_ceneo`, `share_to_ceneo`, `TS_Zal`)
+VALUES (NULL,\'' . $val['id_product'] . '\', \'' . $id_ceneo. '\',\'0\' \''.$date.'\')';
     date_create()->format('Y-m-d H:i:s');
     Db::getInstance(_PS_USE_SQL_SLAVE_)->execute($sql);
-                                                                    }
+
 
 }
      return;
