@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>ec_ceneoanalitycs</name>
+    <displayName><![CDATA[Ceneo Analytics]]></displayName>
+    <version><![CDATA[1.7.9]]></version>
+    <description><![CDATA[Ceneo Analytics]]></description>
+    <author><![CDATA[Krzysztof Mazur]]></author>
+    <tab><![CDATA[front_features]]></tab>
+    <is_configurable>0</is_configurable>
+    <need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+</module>
