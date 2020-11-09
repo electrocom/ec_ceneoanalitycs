@@ -262,7 +262,7 @@ foreach ( $result as $key =>$val ) {
    $date= date_create()->format('Y-m-d H:i:s');
    $id_ceneo=null;
     $sql = 'INSERT INTO `ps_ec_ceneo_analitycs` (`id_ceneo_analitycs`, `id_product`, `id_ceneo`, `share_to_ceneo`, `TS_Zal`)
-VALUES (NULL,\'' . $val['id_product'] . '\', \'' . $id_ceneo. '\',\'0\' \''.$date.'\')';
+VALUES (NULL,\'' . $val['id_product'] . '\', \'' . $id_ceneo. '\',\'0\', \''.$date.'\')';
     date_create()->format('Y-m-d H:i:s');
     Db::getInstance(_PS_USE_SQL_SLAVE_)->execute($sql);
 
