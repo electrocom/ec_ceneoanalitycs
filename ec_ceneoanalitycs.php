@@ -146,6 +146,8 @@ class Ec_Ceneoanalitycs extends Module
     }
 
     public function hookDisplayProductPriceBlock($param){
+
+       if($param['type']=='price'){
         $CeneoConfiguration = new CeneoConfiguration();
 
         $id_product=$param['product']['id_product'];
@@ -168,6 +170,6 @@ class Ec_Ceneoanalitycs extends Module
         $this->smarty->assign('isBetterPrice',0);
 
 
-        return $this->fetch($this->templateFile);
-    }
+    //   return $this->fetch($this->templateFile);
+    }                                                       }
 }
