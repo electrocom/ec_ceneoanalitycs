@@ -32,7 +32,8 @@ class CeneoShopPrice
         $specificprice->reduction_type = $reduction_type_percentage ? 'percentage' : 'amount';
 
 
-        $specificprice->id = $specificprice->exists($specificprice->id_product,
+        $specificprice->id = $specificprice->exists(
+            $specificprice->id_product,
             $specificprice->id_product_attribute,
             $specificprice->id_shop,
             $specificprice->id_group,
@@ -40,7 +41,9 @@ class CeneoShopPrice
             $specificprice->id_currency,
             $specificprice->id_customer,
             $specificprice->from_quantity, $specificprice->from, $specificprice->to);
+
         try {
+            
             $specificprice->save(1, 1);
 
         } catch (Exception $e) {

@@ -2,6 +2,8 @@
 require_once _PS_MODULE_DIR_ . 'ec_ceneoanalitycs/classes/Models/CeneoAnalyticsModel.php';
 require_once _PS_MODULE_DIR_ . 'ec_ceneoanalitycs/classes/TimeTableForm.php';
 require_once _PS_MODULE_DIR_ . 'ec_ceneoanalitycs/classes/Models/CeneoConfiguration.php';
+require_once _PS_MODULE_DIR_ . 'ec_ceneoanalitycs/classes/Models/CeneoAnalyticsRepository.php';
+require_once _PS_MODULE_DIR_ . 'ec_ceneoanalitycs/classes/CeneoCategory.php';
 class AdminCeneoAnalitycsController extends ModuleAdminController
 {
 public static $definition;
@@ -72,10 +74,9 @@ public static $definition;
 
         $values = Tools::getAllValues();
 
-   //     die(  "<pre>".print_r($values,1));
+        //die(  "<pre>".print_r($values,1));
         $ceneo_analytics = new CeneoAnalyticsModel($values['id_ceneo_analitycs']);
         $ceneo_analytics->ImportFromArray($values);
-
         $ceneo_analytics->TS_Mod=date_create()->format('Y-m-d H:i:s');
         $ceneo_analytics->save(true,false);
         return true;

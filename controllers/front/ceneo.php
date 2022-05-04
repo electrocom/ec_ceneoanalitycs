@@ -21,6 +21,10 @@ class Ec_CeneoanalitycsCeneoModuleFrontController extends ModuleFrontController
             CeneoAnalyticsModel::ImportPriceFromCeneo();
         }elseif ( Tools::getIsset('generate')){
             $this->generateCeneoOfferts();
+
+            $CeneoCategory = new CeneoCategory();
+            $CeneoCategory->assignToCeneoCategory();
+
         }elseif( Tools::getIsset('xml')){
             $this->renderXML();
         }else{
@@ -34,16 +38,18 @@ class Ec_CeneoanalitycsCeneoModuleFrontController extends ModuleFrontController
     }
 
      public function generateCeneoOfferts(){
-        $sql='SELECT * FROM `ps_ec_ceneo_analitycs`  ORDER BY `ps_ec_ceneo_analitycs`.`TS_Mod` ASC ';
-        $result= Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
-        foreach ( $result as $key =>$val ) {
 
-            $tmp=new CeneoAnalyticsModel($val['id_ceneo_analitycs']);
-            $tmp->current_price=$tmp->getCeneoPrice();
+         $CeneoAnalyticsRepository = new CeneoAnalyticsRepository('CeneoOffersList');
+
+         foreach ( $CeneoAnalyticsRepository as $key =>$tmp ) {
+            $tmp->current_price=   $tmp->getCeneoPrice();
+
+
 
 
 
             if($tmp->getActive()&& $tmp->getIsActiveAutoControlPriceNow()){
+
                 /*Ustawianie cen specjalnych, gdy autoregulacja jest  włączona */
                 $CeneoShopPrice = new CeneoShopPrice();
                 $CeneoShopPrice->SaveSpecyficPrice($tmp->getCurrentPriceWithoutVat(), $tmp->id_product);
@@ -51,25 +57,29 @@ class Ec_CeneoanalitycsCeneoModuleFrontController extends ModuleFrontController
                 /*Usuwanie cen specjalnych, gdy autoregulacja została wyłaczona */
                 $CeneoShopPrice = new CeneoShopPrice();
                 $CeneoShopPrice->DeleteSpecificPrice( $tmp->id_product);
-
             }
 
             $CeneoConfiguration = new CeneoConfiguration();
             if((int)$CeneoConfiguration->always_enable_group_id){
                 $CeneoShopPrice = new CeneoShopPrice();
                 $CeneoShopPrice->SaveSpecyficPrice($tmp->getCurrentPriceWithoutVat(), $tmp->id_product,0,(int)$CeneoConfiguration->always_enable_group_id);
-            }else{
+            }else if($CeneoConfiguration->last_always_enable_group_id>0){
                 $CeneoShopPrice = new CeneoShopPrice();
                 $CeneoShopPrice->DeleteSpecificPrice( $tmp->id_product,0,$CeneoConfiguration->last_always_enable_group_id);
                 }
-            $tmp->update(1,1);
+
+
+            //$tmp->TS_Mod=date('Y-m-d H:i:s');
+          $tmp->update(1,1);
+
         }
 
     }
 
     public function renderXML()
     {
-        $CeneoRenderXML = new CeneoRenderXML();
+        $CeneoAnalyticsRepository = new CeneoAnalyticsRepository('OnlyBestPricesList');
+        $CeneoRenderXML = new CeneoRenderXML($CeneoAnalyticsRepository);
         $CeneoRenderXML->generateXML();
 
     }

@@ -7,6 +7,7 @@ private $prices;
 public function __construct($id_ceneo)
 {
     $this->prices = null;
+    $product_delivery_info=null;
     try {
     $url = CENEO_URL;
     $agent = 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)';
@@ -17,11 +18,13 @@ public function __construct($id_ceneo)
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_USERAGENT, $agent);
     curl_setopt($ch, CURLOPT_URL, 'https://www.ceneo.pl/' . $id_ceneo);
+
     $result = curl_exec($ch);
 
         if (!curl_errno($ch)) {
             switch ($http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE)) {
                 case 200:    $html = str_get_html($result);
+
                     break;
                 case 301:
                     $info = curl_getinfo($ch);
@@ -29,6 +32,7 @@ public function __construct($id_ceneo)
 
                     $result = curl_exec($ch);
                     $html = str_get_html($result);
+
                     break;
                 default:
                     echo 'Unexpected HTTP code: ', $http_code, "\n";
@@ -38,8 +42,17 @@ public function __construct($id_ceneo)
 
 
 
-    $html->find('tr.product-offer');
-    foreach ($html->find('tr.product-offer') as $a) {
+   // $html->find('div.product-offers-2020__list');
+       // print_r($html->find('div.product-offers-2020__list'));
+    foreach ($html->find('div.product-offer-2020__container') as $a) {
+
+
+  //do omijania produktów podobnych polechanych i innych
+        if($a->{'data-productid'}!=$id_ceneo)  {
+            continue;
+        }
+
+
         if($a->find('span.free-delivery-txt'))
             $is_free_delivery=1;
         else
@@ -50,14 +63,18 @@ public function __construct($id_ceneo)
         else
             $is_in_stock=0;
 
-        foreach($a->find('div.product-delivery-info') as $value){
+        foreach($a->find('span.product-delivery-info') as $value){
 
           // die( $value->plaintext);
             $value->plaintext=str_replace('&#243;','',$value->plaintext);
             $product_delivery_info= (float)str_replace(',','.',preg_replace('/[^0-9,]/','',  $value->plaintext));
         }
+
         if(!$product_delivery_info)
             $product_delivery_info=$a->{'data-price'};
+
+
+
         $this->prices[] = array('price' => $a->{'data-price'}, 'shop' => $a->{'data-shopurl'},'free_delivery'=>$is_free_delivery,'in_stock'=>$is_in_stock
         ,'price_with_delivery'=>$is_free_delivery?$a->{'data-price'}:$product_delivery_info );
 
@@ -67,6 +84,7 @@ public function __construct($id_ceneo)
 
      }
      catch(Exception $e){
+        echo $e->getMessage();
 echo "Błąd przetwarzania:".$id_ceneo.PHP_EOL;
      }
 }

@@ -12,31 +12,20 @@ include dirname(__FILE__).'/SimpleXMLExtended.php';
 class CeneoRenderXML
 {
     public $promo;
+    private $ceneoAnalyticsRepository;
     
-        public function __construct()
+    public function __construct( CeneoAnalyticsRepository $ceneoAnalyticsRepository )
     {
-            
 $this->promo="";
-  
+$this->ceneoAnalyticsRepository=$ceneoAnalyticsRepository;
        
     }  
     
     function generateXML($tofile=false){
-      /*  
-     
-        if (isset(Context::getContext()->controller)) {
-    $controller = Context::getContext()->controller;
-} else {
-    
-    
-   
-}*/     
+
        if( Context::getContext()->customer-> isLogged())
-       {
-           Context::getContext()->customer-> logout();
+       {   Context::getContext()->customer-> logout();
            die ('Błąd użytkownik zalogowany');
-       
-           
        }
    
 
@@ -52,26 +41,25 @@ $this->promo="";
   . 'standalone="yes"?><offers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1"></offers>'; 
 $xml = new SimpleXMLExtended($xmlstr);
 
-
-
-$data = CeneoAnalyticsModel::getCeneoProductsPublic();
   
-foreach( $data as $val){
+foreach( $this->ceneoAnalyticsRepository as $val){
 
-    $product = new Product((int)  $val['id_product']);
-    $qty=Product::getQuantity($val['id_product']);
-    $avail=empty($qty)?'14':'1';
+   $product = new Product((int)  $val->id_product);
+   $qty=Product::getQuantity($product->id);
+   $avail=empty($qty)?'14':'1';
    $cat= $this->getCategoryPath($product->id_category_default);
    $img_main=$product->getCoverWs(); 
    $allimg=$product->getWsImages();
+   $basket=$val->getIsBuyNow()?'1':'0';
    
 $manufacturer = new Manufacturer((int)  $product->id_manufacturer);
 $xml_product= $xml->addChild('o');
-$xml_product->addAttribute('id', $val['id_product']);
+$xml_product->addAttribute('id', $product->id);
 $xml_product->addAttribute('url', $product->getLink());
 $xml_product->addAttribute('price',$product->getPublicPrice());
 $xml_product->addAttribute('avail',$avail);
 $xml_product->addAttribute('stock',$qty);
+$xml_product->addAttribute('basket',$basket);
 $xml_product->addChildWithCDATA('cat', htmlspecialchars($cat));
 $xml_product->addChildWithCDATA('desc', htmlspecialchars(strip_tags( $product->description['1'] ) ));
 $xml_product->addChildWithCDATA('name', htmlspecialchars(strip_tags( $product->name['1'].' '.$this->promo ) ));

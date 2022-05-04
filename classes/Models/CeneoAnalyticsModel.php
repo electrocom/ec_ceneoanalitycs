@@ -29,7 +29,7 @@ private   $product;
             'ceneo_best_price' => ['type' => self::TYPE_FLOAT, 'db_type' => 'decimal(20,6)', 'required' => false],
             'ceneo_free_delivery' => ['type' => self::TYPE_BOOL, 'db_type' => 'int', 'required' => false],
             'ceneo_in_stock' => ['type' => self::TYPE_BOOL, 'db_type' => 'int', 'required' => false],
-            'ceneo_price_with_delivery' => ['type' => self::TYPE_BOOL, 'db_type' => 'int', 'required' => false],
+            'ceneo_price_with_delivery' => ['type' => self::TYPE_BOOL, 'db_type' => 'decimal(20,6)', 'required' => false],
             'ceneo_always_get_price' => ['type' => self::TYPE_BOOL, 'db_type' => 'int', 'required' => false],
             'ceneo_offers' => ['type' => self::TYPE_STRING, 'db_type' => 'JSON', 'required' => false],
             'current_price' => ['type' => self::TYPE_FLOAT, 'db_type' => 'decimal(20,6)', 'required' => false],
@@ -86,21 +86,23 @@ private   $product;
         if($this->buy_now)
             return $this->buy_now;
         else{
-            $this->CeneoConfiguration->buy_now;
+         return   $this->CeneoConfiguration->buy_now;
         }
     }
 
     public function getIsBuyNow(){
-     switch ($this-> getIsBuyNow()){
+     switch ($this-> getBuyNow()){
          case 1:
              return true;
              break;
          case 2:
-
+             if($this->hasBestPrice())
+                 return true;
+             else
+                 return false;
 
          break;
-         if($this->hasBestPrice())
-             return true;
+
          case 3:
              return false;
          break;
@@ -229,19 +231,20 @@ private   $product;
 
 
     static public function ImportPriceFromCeneo(){
-        $sql='SELECT * FROM `ps_ec_ceneo_analitycs`  ORDER BY `ps_ec_ceneo_analitycs`.`TS_Mod` ASC ';
-        $result= Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
-        foreach ( $result as $key =>$val ) {
+
+        $CeneoAnalyticsRepository = new CeneoAnalyticsRepository('CeneoOffersList');
+        foreach ( $CeneoAnalyticsRepository as $key =>$val ) {
+
             $date= date_create()->format('Y-m-d H:i:s');
-            $ceneo=new CeneoPrices($val['id_ceneo']);
+            $ceneo=new CeneoPrices($val->id_ceneo);
             $json_ceneo_offers = json_encode($ceneo->getPrices());
             $ceneo_best_price= $ceneo->getBestPrice(1,true);
             $quantity_offers=$ceneo->getQuantityOffers();
             if($ceneo_best_price){
-            $sql = 'UPDATE `ps_ec_ceneo_analitycs` SET `ceneo_best_price` = \''.$ceneo_best_price['price'].'\', `TS_Mod` = \''.$date.'\', `shop_name` =\''.$ceneo_best_price['shop'].'\' , `ceneo_free_delivery` =\''.$ceneo_best_price['free_delivery'].'\' , `ceneo_in_stock` =\''.$ceneo_best_price['in_stock'].'\'  , `ceneo_price_with_delivery` =\''.$ceneo_best_price['price_with_delivery'].'\', `ceneo_offers`=\''.$json_ceneo_offers.'\' , `quantity_offers`=\''.$quantity_offers.'\' WHERE `ps_ec_ceneo_analitycs`.`id_ceneo_analitycs` = '.$val['id_ceneo_analitycs'].'  ';
+            $sql = 'UPDATE `ps_ec_ceneo_analitycs` SET `ceneo_best_price` = \''.$ceneo_best_price['price'].'\', `TS_Mod` = \''.$date.'\', `shop_name` =\''.$ceneo_best_price['shop'].'\' , `ceneo_free_delivery` =\''.$ceneo_best_price['free_delivery'].'\' , `ceneo_in_stock` =\''.$ceneo_best_price['in_stock'].'\'  , `ceneo_price_with_delivery` =\''.$ceneo_best_price['price_with_delivery'].'\', `ceneo_offers`=\''.$json_ceneo_offers.'\' , `quantity_offers`=\''.$quantity_offers.'\' WHERE `ps_ec_ceneo_analitycs`.`id_ceneo_analitycs` = '.$val->id_ceneo_analitycs.'  ';
                 Db::getInstance(_PS_USE_SQL_SLAVE_)->execute($sql);
         }else{
-                $sql = 'UPDATE `ps_ec_ceneo_analitycs` SET `ceneo_best_price` = \'\', `TS_Mod` = \''.$date.'\', `shop_name` =\'\' , `ceneo_free_delivery` =\'\' , `ceneo_in_stock` =\'\'  , `ceneo_price_with_delivery` =\'\', `ceneo_offers`=\'{}\'  , `quantity_offers`=\'\'  WHERE `ps_ec_ceneo_analitycs`.`id_ceneo_analitycs` = '.$val['id_ceneo_analitycs'].'';
+                $sql = 'UPDATE `ps_ec_ceneo_analitycs` SET `ceneo_best_price` = \'\', `TS_Mod` = \''.$date.'\', `shop_name` =\'\' , `ceneo_free_delivery` =\'\' , `ceneo_in_stock` =\'\'  , `ceneo_price_with_delivery` =\'\', `ceneo_offers`=\'{}\'  , `quantity_offers`=\'\'  WHERE `ps_ec_ceneo_analitycs`.`id_ceneo_analitycs` = '.$val->id_ceneo_analitycs.'';
                 Db::getInstance(_PS_USE_SQL_SLAVE_)->execute($sql);
             }
 
@@ -288,7 +291,9 @@ VALUES (NULL,\'' . $val['id_product'] . '\', \'' . $id_ceneo. '\',\'0\', \''.$da
         }
     }
     public function hasBestPrice(){
-        if($this->shop_name==$this->CeneoConfiguration->shop_name)
+
+
+         if($this->shop_name==$this->CeneoConfiguration->shop_name)
           return true;
         else
           return  false;
@@ -344,14 +349,20 @@ VALUES (NULL,\'' . $val['id_product'] . '\', \'' . $id_ceneo. '\',\'0\', \''.$da
         {//Przypadek gdy nie ma ofert na ceneo lub nasza oferta jest jedyna
 
             $price=  $regular_price;
-        }elseif($win){
+        }elseif($win){//Przypadek gdy nasza cena jest najniższa, wtedy podwyższamy cenę
                 if($second_price){
-                    $price=   $second_price-$skok;
-                                }
-            else
-                $price= $cprice;
+            $price=   $second_price-$skok;
+
+
+                }
+            else{
+            $price= $cprice;
+
+            }
+
+
                  }
-               else{
+        else{//Przypadek gdy przegrywamy, wtedy obniżamy cenę.
                    if($cprice-$skok>=$min_price)
                        $price= $cprice-$skok;
                    else
@@ -365,9 +376,11 @@ VALUES (NULL,\'' . $val['id_product'] . '\', \'' . $id_ceneo. '\',\'0\', \''.$da
                      $price=$max_price;
 
                if($price==0){
+
                    return $regular_price;
                              }
                else{
+
                    return $price;
                    }
 
